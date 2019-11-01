@@ -1,16 +1,11 @@
-use std::convert::TryInto;
 use hdk::{
     AGENT_ADDRESS,
-    PUBLIC_TOKEN,
-    DNA_ADDRESS,
     holochain_core_types::{
         entry::Entry,
         link::LinkMatch,
     },
     holochain_json_api::{
         json::RawString,
-        json::JsonString,
-        error::JsonError,
     },
     holochain_persistence_api::{
         cas::content::Address,
@@ -25,16 +20,6 @@ use utils::{
     get_links_and_load_type
 };
 use crate::member::Profile;
-use crate::profile_spec;
-use serde_json::json;
-
-
-#[derive(Debug, Serialize, Deserialize, DefaultJson)]
-#[serde(rename_all = "camelCase")]
-struct SignalPayload {
-    view: String,
-	location: String
-}
 
 pub fn handle_register(name: String, avatar_url: String) -> ZomeApiResult<Address> {
     let anchor_entry = Entry::App(
@@ -48,43 +33,15 @@ pub fn handle_register(name: String, avatar_url: String) -> ZomeApiResult<Addres
     let profile_entry = Entry::App(
         "chat_profile".into(),
         Profile {
-        name,
-        avatar_url,
-        address: AGENT_ADDRESS.to_string().into()
-    }.into()
+            name,
+            avatar_url,
+            address: AGENT_ADDRESS.to_string().into()
+        }.into()
     );
     let profile_addr = hdk::commit_entry(&profile_entry)?;
     hdk::link_entries(&AGENT_ADDRESS, &profile_addr, "profile", "")?;
 
     Ok(AGENT_ADDRESS.to_string().into())
-}
-
-fn register_spec() -> ZomeApiResult<()> {
-    hdk::debug(profile_spec()).ok();
-    hdk::debug("register spec start")?;
-    let result = hdk::call("p-p-bridge", "profiles", Address::from(PUBLIC_TOKEN.to_string()), // never mind this for now
-        "register_app",
-        profile_spec(),
-    );
-    hdk::debug(format!("{:?}", result)).unwrap();
-    hdk::debug("register spec end")?;
-    Ok(())
-}
-
-pub fn retrieve_profile(field_name: String) -> ZomeApiResult<String> {
-    hdk::debug("retrieve_profile start")?;
-
-    let result_json = hdk::call(
-        "p-p-bridge",
-        "profiles",
-        Address::from(PUBLIC_TOKEN.to_string()), // never mind this for now
-        "retrieve",
-        json!({"retriever_dna": Address::from(DNA_ADDRESS.to_string()), "profile_field": field_name}).into()
-    )?;
-
-    hdk::debug(format!("result of bridge call to retrieve: {:?}", result_json))?;
-
-    result_json.try_into()?
 }
 
 pub fn handle_get_member_profile(agent_address: Address) -> ZomeApiResult<Profile> {
@@ -97,49 +54,6 @@ pub fn handle_get_member_profile(agent_address: Address) -> ZomeApiResult<Profil
         })
 }
 
-pub fn handle_get_full_name(agent_address: Address) -> ZomeApiResult<JsonString> {
-    let received_str = hdk::send(agent_address, json!({"msg_type": "full_name_request", "id": "", "name": ""}).to_string(), 10000.into())?;
-    hdk::debug(format!("handle_get_full_name {}", received_str)).ok();
-    Ok(JsonString::from_json(&received_str))
-}
-
 pub fn handle_get_my_member_profile() -> ZomeApiResult<Profile> {
-    match handle_get_member_profile(AGENT_ADDRESS.to_string().into()) {
-        Ok(profile) => {
-            hdk::debug(format!("Found the profile {}", profile.name)).ok();
-            // check if there any updates that have been made in P&P (if available)
-            // fall back to using the existing saved info
-            let name = retrieve_profile("handle".to_string()).unwrap_or(profile.name);
-            let avatar_url = retrieve_profile("avatar".to_string()).unwrap_or(profile.avatar_url);
-            Ok(Profile {
-                name,
-                avatar_url,
-                ..profile
-            })
-        },
-        Err(_) => {
-            hdk::debug("Did not find profile").ok();
-            match (retrieve_profile("handle".to_string()), retrieve_profile("avatar".to_string())) {
-                (Ok(handle), Ok(avatar)) => {
-                    // handle and avatar both successfully retrieved from P&P
-                    // register them then return the profile
-                    handle_register(handle.clone(), avatar.clone())?;
-                    hdk::debug("Profile details registered").ok();
-                    Ok(Profile {
-                        name: handle,
-                        avatar_url: avatar,
-                        address: AGENT_ADDRESS.to_string().into(),
-                    })
-                }
-                _ => {
-                    // no handle or avatar in P&P
-                    // register the spec then trigger redirect
-                    register_spec().unwrap();
-                    hdk::debug("Spec registered").ok();
-                    let _ = hdk::emit_signal("switch_view", SignalPayload{view: "Identity Manager".to_string(), location: format!("profile/{}/Peer Chat", DNA_ADDRESS.to_string())});
-                    Err(ZomeApiError::Internal(DNA_ADDRESS.to_string()))
-                }
-            }
-        },
-    }
+    handle_get_member_profile(AGENT_ADDRESS.to_string().into())
 }

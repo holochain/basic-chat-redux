@@ -20,11 +20,6 @@ pub struct Member {
     pub profile: Profile
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, DefaultJson)]
-pub struct AllowedMembers {
-    pub pub_sign_key: Vec<String>,
-}
-
 // This is the full profile that can be requested for a member
 #[derive(Serialize, Deserialize, Debug, Clone, DefaultJson)]
 pub struct Profile {
@@ -61,24 +56,5 @@ pub fn profile_definition() -> ValidatingEntryType {
                 }
             )
         ]
-    )
-}
-
-pub fn allowed_members_definition() -> ValidatingEntryType {
-    entry!(
-        name: "allowed_members",
-        description: "List of allowed agent keys",
-        sharing: Sharing::Public,
-
-        validation_package: || {
-            hdk::ValidationPackageDefinition::Entry
-        },
-
-        validation: |_validation_data: hdk::EntryValidationData<AllowedMembers>| {
-            //Only progenitor can manage this list.
-            Ok(())
-        },
-
-        links: []
     )
 }

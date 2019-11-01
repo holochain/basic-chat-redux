@@ -1,0 +1,38 @@
+# -----------  Agents  -----------
+[[agents]]
+  id = "test_agent1"
+  name = "Agent 1"
+  public_address = "HcScjTnefoi6c79eunbqfFNYEYovwaygbPkWEk95xVPd7vemvoB9Qwbjxf458ii"
+  keystore_file = "./agent1.keystore"
+
+# -----------  DNAs  -----------
+
+[[dnas]]
+  id = "peer_chat_dna"
+  file = "./dna/peer-chat.dna.json"
+  hash = "QmdUeHtuJ8xBo9VjEyaoZMZqGQFv5pVHKc29bRWySa2M4X"
+
+
+# -----------  Instances  -----------
+
+[[instances]]
+  id = "peer-chat-public"
+  dna = "peer_chat_dna"
+  agent = "test_agent1"
+[instances.storage]
+  type = "memory"
+
+# -----------  Interfaces  -----------
+
+[[interfaces]]
+  id = "websocket_interface"
+  admin = true
+[interfaces.driver]
+  type = "websocket"
+  port = 3401
+
+# -----------  Networking  -----------
+
+[network]
+  type = "sim2h"
+  sim2h_url = 'wss://sim2h.holochain.org:9000'
