@@ -16,7 +16,7 @@
 # -----------  Instances  -----------
 
 [[instances]]
-  id = "peer-chat-public"
+  id = "basic-chat"
   dna = "peer_chat_dna"
   agent = "test_agent1"
 [instances.storage]
@@ -30,7 +30,8 @@
 [interfaces.driver]
   type = "websocket"
   port = 3401
-
+[[interfaces.instances]]
+  id = "basic-chat"
 # -----------  Networking  -----------
 
 [network]

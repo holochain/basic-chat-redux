@@ -77,7 +77,7 @@ export const Group = ({
         ) : connected ? (
           user.id ? <JoinConversationScreen /> : <RegisterScreen registerUser={registerUser} />
         ) : (
-          <WelcomeScreen message='You need to create a profile for each chat group you are part of. Please use Identity Manager to set your handle, avatar and optionally your full name.' />
+          <WelcomeScreen message="Please check your Holochain conductor is running and accepting websocket connections on the correct port" />
         )}
     </section>
   </main>
