@@ -8,7 +8,6 @@ extern crate serde;
 extern crate utils;
 #[macro_use]
 extern crate serde_derive;
-#[macro_use]
 extern crate serde_json;
 #[macro_use]
 extern crate validator_derive;
@@ -35,17 +34,22 @@ pub static PUBLIC_STREAM_ENTRY: &str = "public_conversation";
 pub static PUBLIC_STREAM_LINK_TYPE_TO: &str = "has_member";
 pub static PUBLIC_STREAM_LINK_TYPE_FROM: &str = "member_of";
 
-#[derive(Serialize, Deserialize, Debug, DefaultJson, PartialEq)]
-struct Message {
-    msg_type: String,
-    id: String,
+pub const CHANNEL_MESSAGE_SIGNAL_TYPE: &str = "new_convo_message";
+
+
+#[derive(Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct NotificationSignalPayload {
+    conversation_address: Address,
+    message: message::Message,
 }
 
-#[derive(Debug, Serialize, Deserialize, DefaultJson)]
-#[serde(rename_all = "camelCase")]
-struct SignalPayload {
-    conversation_id: String,
+/// Fully typed definition of the types of direct messages
+#[derive(Serialize, Deserialize, Debug, DefaultJson, PartialEq)]
+enum DirectMessage {
+	ChannelMessageNotification(NotificationSignalPayload),
 }
+
 
 #[derive(Debug, Serialize, Deserialize, DefaultJson)]
 #[serde(rename_all = "camelCase")]
@@ -68,28 +72,19 @@ pub mod chat {
 
     #[receive]
     pub fn receive(from: Address, msg_json: JsonString) -> String {
-        hdk::debug(format!("New message from: {:?}", from)).ok();
-        let maybe_message: Result<Message, _> = JsonString::from_json(&msg_json).try_into();
+        hdk::debug(format!("New direct message from: {:?}", from)).ok();
+        let maybe_message: Result<DirectMessage, _> = JsonString::from_json(&msg_json).try_into();
         match maybe_message {
-            Err(err) => format!("error: {}", err),
-            Ok(message) => match message.msg_type.as_str() {
-                "new_conversation_member" | "new_message" => {
-                    let conversation_id = message.id;
-                    let _ = hdk::emit_signal(
-                        message.msg_type.as_str(),
-                        SignalPayload { conversation_id },
-                    );
-                    json!({
-                        "msg_type": message.msg_type.as_str(),
-                        "body": format!("Emit: {}", message.msg_type.as_str())
-                    })
-                    .to_string()
+            Err(err) => format!("Err({})", err),
+            Ok(message) => match message {
+                DirectMessage::ChannelMessageNotification(signal_payload) => {
+                    // send a signal to the UI which it can use to reactively display messages
+                    hdk::emit_signal(
+                        CHANNEL_MESSAGE_SIGNAL_TYPE,
+                        signal_payload,
+                    ).ok();
+                    String::from("Ok")
                 }
-                _ => json!({
-                    "msg_type": message.msg_type.as_str(),
-                    "body": format!("No match: {}", message.msg_type.as_str())
-                })
-                .to_string(),
             },
         }
     }

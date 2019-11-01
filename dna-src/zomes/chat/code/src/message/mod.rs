@@ -11,7 +11,7 @@ use hdk::{
 
 use validator::Validate;
 
-#[derive(Serialize, Deserialize, Debug, Clone, DefaultJson, Validate)]
+#[derive(Serialize, Deserialize, Debug, Clone, DefaultJson, Validate, PartialEq)]
 pub struct Message {
     pub timestamp: u32,
     pub author: String,

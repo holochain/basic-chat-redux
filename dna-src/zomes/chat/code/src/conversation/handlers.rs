@@ -3,18 +3,21 @@ use hdk::{
     self,
     error::ZomeApiResult,
     holochain_core_types::{entry::Entry, link::LinkMatch},
-    holochain_json_api::json::RawString,
+    holochain_json_api::json::{JsonString, RawString},
     holochain_persistence_api::cas::content::{Address, AddressableContent},
     AGENT_ADDRESS,
 };
 use std::collections::HashSet;
-
+use crate::{
+    DirectMessage,
+    NotificationSignalPayload,
+};
 use crate::conversation::Conversation;
 
 use crate::message;
 use utils::{get_links_and_load_type, GetLinksLoadResult};
 
-fn notify_conversation(conversation_address: Address, msg_type: String) -> ZomeApiResult<()> {
+fn notify_conversation(conversation_address: Address, message: message::Message) -> ZomeApiResult<()> {
     handle_get_members(conversation_address.clone())?
         .iter()
         .filter(|member_id| {
@@ -25,7 +28,14 @@ fn notify_conversation(conversation_address: Address, msg_type: String) -> ZomeA
             hdk::debug(format!("Send a message to: {:?}", &member_id.to_string())).ok();
             hdk::send(
                 member_id.clone(),
-                json!({"msg_type": msg_type, "id": &conversation_address}).to_string(),
+                JsonString::from(
+                    DirectMessage::ChannelMessageNotification(
+                        NotificationSignalPayload{
+                            conversation_address: conversation_address.clone(),
+                            message: message.clone(),
+                        }
+                    )
+                ).into(),
                 10000.into(),
             )
             .ok();
@@ -115,11 +125,11 @@ pub fn handle_post_message(
     message_spec: message::MessageSpec,
 ) -> ZomeApiResult<()> {
     let message = message::Message::from_spec(&message_spec, &AGENT_ADDRESS.to_string());
-    let message_entry = Entry::App("message".into(), message.into());
+    let message_entry = Entry::App("message".into(), message.clone().into());
     let message_addr = hdk::commit_entry(&message_entry)?;
     hdk::link_entries(&conversation_address, &message_addr, "message_in", "")?;
     // send the message direct as a signal to every agent in the channel
-    notify_conversation(conversation_address, "new_message".to_string())?;
+    notify_conversation(conversation_address, message)?;
     Ok(())
 }
 
