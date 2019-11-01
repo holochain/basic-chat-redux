@@ -35,9 +35,10 @@ pub static PUBLIC_STREAM_LINK_TYPE_TO: &str = "has_member";
 pub static PUBLIC_STREAM_LINK_TYPE_FROM: &str = "member_of";
 
 pub const CHANNEL_MESSAGE_SIGNAL_TYPE: &str = "new_convo_message";
+pub const JOIN_CHANNEL_SIGNAL_TYPE: &str = "join_convo_message";
 
 
-#[derive(Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
 #[serde(rename_all = "camelCase")]
 struct NotificationSignalPayload {
     conversation_address: Address,
@@ -45,10 +46,18 @@ struct NotificationSignalPayload {
     message: message::Message,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize, DefaultJson, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct JoinChannelSignalPayload {
+    conversation_address: Address,
+    agent_address: Address,
+}
+
 /// Fully typed definition of the types of direct messages
-#[derive(Serialize, Deserialize, Debug, DefaultJson, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, DefaultJson, PartialEq)]
 enum DirectMessage {
 	ChannelMessageNotification(NotificationSignalPayload),
+	JoinChannelNotification(JoinChannelSignalPayload)
 }
 
 
@@ -77,15 +86,24 @@ pub mod chat {
         let maybe_message: Result<DirectMessage, _> = JsonString::from_json(&msg_json).try_into();
         match maybe_message {
             Err(err) => format!("Err({})", err),
-            Ok(message) => match message {
-                DirectMessage::ChannelMessageNotification(signal_payload) => {
-                    // send a signal to the UI which it can use to reactively display messages
-                    hdk::emit_signal(
-                        CHANNEL_MESSAGE_SIGNAL_TYPE,
-                        signal_payload,
-                    ).ok();
-                    String::from("Ok")
-                }
+            Ok(message) => {
+            	match message {
+	                DirectMessage::ChannelMessageNotification(signal_payload) => {
+	                    // send a signal to the UI which it can use to reactively display messages
+	                    hdk::emit_signal(
+	                        CHANNEL_MESSAGE_SIGNAL_TYPE,
+	                        signal_payload,
+	                    ).ok();
+	                },
+	                DirectMessage::JoinChannelNotification(signal_payload) => {
+	                	// signal the UI that a new agent has joined
+	                    hdk::emit_signal(
+	                        JOIN_CHANNEL_SIGNAL_TYPE,
+	                        signal_payload,
+	                    ).ok();
+	                }
+	            };
+	            String::from("Ok")
             },
         }
     }

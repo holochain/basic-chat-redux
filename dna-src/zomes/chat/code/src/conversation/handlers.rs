@@ -12,6 +12,7 @@ use std::collections::HashSet;
 use crate::{
     DirectMessage,
     NotificationSignalPayload,
+    JoinChannelSignalPayload,
     MESSAGE_ENTRY
 };
 use crate::conversation::Conversation;
@@ -19,7 +20,10 @@ use crate::conversation::Conversation;
 use crate::message;
 use utils::{get_links_and_load_type, GetLinksLoadResult};
 
-fn notify_conversation(conversation_address: Address, message: message::Message) -> ZomeApiResult<()> {
+
+
+
+fn notify_conversation(conversation_address: Address, message: DirectMessage) -> ZomeApiResult<()> {
     handle_get_members(conversation_address.clone())?
         .iter()
         .for_each(|member_id| {
@@ -27,22 +31,37 @@ fn notify_conversation(conversation_address: Address, message: message::Message)
             hdk::send(
                 member_id.clone(),
                 JsonString::from(
-                    DirectMessage::ChannelMessageNotification(
-                        NotificationSignalPayload{
-                            conversation_address: conversation_address.clone(),
-                            message: message.clone(),
-                            message_address: Entry::App(
-                                MESSAGE_ENTRY.into(),
-                                message.clone().into()
-                            ).address()
-                        }
-                    )
+                    message.clone()
                 ).into(),
                 10000.into(),
             )
             .ok();
         });
     Ok(())
+}
+
+fn notify_conversation_message(conversation_address: Address, message: message::Message) -> ZomeApiResult<()> {
+    let message = DirectMessage::ChannelMessageNotification(
+        NotificationSignalPayload{
+            conversation_address: conversation_address.clone(),
+            message: message.clone(),
+            message_address: Entry::App(
+                MESSAGE_ENTRY.into(),
+                message.clone().into()
+            ).address()
+        }
+    );
+    notify_conversation(conversation_address, message)
+}
+
+fn notify_conversation_join(conversation_address: Address) -> ZomeApiResult<()> {
+    let message = DirectMessage::JoinChannelNotification(
+        JoinChannelSignalPayload{
+            conversation_address: conversation_address.clone(),
+            agent_address: AGENT_ADDRESS.to_string().into(),
+        }
+    );
+    notify_conversation(conversation_address, message)
 }
 
 pub fn handle_start_conversation(
@@ -105,6 +124,7 @@ pub fn handle_join_conversation(conversation_address: Address) -> ZomeApiResult<
             "",
         )?;
     }
+    notify_conversation_join(conversation_address)?;
     Ok(())
 }
 
@@ -131,7 +151,7 @@ pub fn handle_post_message(
     let message_addr = hdk::commit_entry(&message_entry)?;
     hdk::link_entries(&conversation_address, &message_addr, "message_in", "")?;
     // send the message direct as a signal to every agent in the channel
-    notify_conversation(conversation_address, message)?;
+    notify_conversation_message(conversation_address, message)?;
     Ok(())
 }
 
