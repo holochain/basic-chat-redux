@@ -87,25 +87,15 @@ export class View extends React.Component {
           message
         }, (result) => {
           console.log('message posted', result)
-          this.actions.getMessages(conversationId) // hack for now
+          // this does not update the UI, it awaits a signal
+          // from holochain to tell it to do this
         })
       },
 
       getMessages: (conversationId) => {
         this.makeHolochainCall(INSTANCE_ID + '/chat/get_messages', { address: conversationId }, (result) => {
           console.log('retrieved messages', result)
-
-          const conversationMessages = result.Ok.map(({ address, entry }) => ({
-            text: entry.payload,
-            sender: entry.author,
-            createdAt: entry.timestamp,
-            id: address
-          }))
-
-          this.setState({
-            messages: { ...this.state.messages, [conversationId]: conversationMessages }
-          })
-          this.actions.scrollToEnd()
+          this.ingestMessages(conversationId, result.Ok)
         })
       },
 
@@ -169,12 +159,39 @@ export class View extends React.Component {
     }
   }
 
-  handleSignal(signal) {
+  // used to add message to the state either from get requests
+  // or signals and add them to a conversation
+  // input (messages) expected to be array of objects with {address, entry} fields
+  ingestMessages = (conversationId, messages) => {
+    const existingConvoMessages = this.state.messages[conversationId] || []
+    const newConversationMessages = messages.map(({ address, entry }) => ({
+      text: entry.payload,
+      sender: entry.author,
+      createdAt: entry.timestamp,
+      id: address
+    }))
+
+    // dedup on id
+    let unique_messages = {}
+    existingConvoMessages.forEach((message) => {
+      unique_messages[message.id] = message
+    })
+    newConversationMessages.forEach((message) => {
+      unique_messages[message.id] = message
+    })
+
+    this.setState({
+      messages: { ...this.state.messages, [conversationId]: Object.values(unique_messages) }
+    })
+    this.actions.scrollToEnd()
+  }
+
+  handleSignal = (signal) => {
     console.log(JSON.stringify(signal.signal))
-    if (signal.signal.name === 'new_message') {
-      const {conversationId} = JSON.parse(signal.signal.arguments)
-      // this can fail because the get might not be able to see the new message
-      this.actions.getMessages(conversationId)
+    const signalContent = signal.signal
+    if (signalContent.name === 'new_convo_message') {
+      const { conversationAddress, message, messageAddress } = JSON.parse(signalContent.arguments)
+      this.ingestMessages(conversationAddress, [{entry: message, address: messageAddress}])
     }
   }
 

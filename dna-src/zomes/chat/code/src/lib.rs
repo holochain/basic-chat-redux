@@ -41,6 +41,7 @@ pub const CHANNEL_MESSAGE_SIGNAL_TYPE: &str = "new_convo_message";
 #[serde(rename_all = "camelCase")]
 struct NotificationSignalPayload {
     conversation_address: Address,
+    message_address: Address,
     message: message::Message,
 }
 

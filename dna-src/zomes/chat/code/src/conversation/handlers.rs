@@ -6,11 +6,13 @@ use hdk::{
     holochain_json_api::json::{JsonString, RawString},
     holochain_persistence_api::cas::content::{Address, AddressableContent},
     AGENT_ADDRESS,
+
 };
 use std::collections::HashSet;
 use crate::{
     DirectMessage,
     NotificationSignalPayload,
+    MESSAGE_ENTRY
 };
 use crate::conversation::Conversation;
 
@@ -20,10 +22,6 @@ use utils::{get_links_and_load_type, GetLinksLoadResult};
 fn notify_conversation(conversation_address: Address, message: message::Message) -> ZomeApiResult<()> {
     handle_get_members(conversation_address.clone())?
         .iter()
-        .filter(|member_id| {
-            // don't signal yourself
-            &AGENT_ADDRESS.to_string() != &member_id.to_string()
-        })
         .for_each(|member_id| {
             hdk::debug(format!("Send a message to: {:?}", &member_id.to_string())).ok();
             hdk::send(
@@ -33,6 +31,10 @@ fn notify_conversation(conversation_address: Address, message: message::Message)
                         NotificationSignalPayload{
                             conversation_address: conversation_address.clone(),
                             message: message.clone(),
+                            message_address: Entry::App(
+                                MESSAGE_ENTRY.into(),
+                                message.clone().into()
+                            ).address()
                         }
                     )
                 ).into(),
