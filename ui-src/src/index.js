@@ -88,7 +88,6 @@ export class View extends React.Component {
         }, (result) => {
           console.log('message posted', result)
           this.actions.getMessages(conversationId) // hack for now
-          this.actions.scrollToEnd()
         })
       },
 
@@ -106,6 +105,7 @@ export class View extends React.Component {
           this.setState({
             messages: { ...this.state.messages, [conversationId]: conversationMessages }
           })
+          this.actions.scrollToEnd()
         })
       },
 

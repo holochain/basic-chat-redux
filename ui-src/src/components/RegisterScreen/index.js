@@ -33,7 +33,7 @@ export const RegisterScreen = ({ registerUser }) => (
           })
         }}
       >
-        <input id='handle' placeholder='input @handle' />
+        <input id='handle' placeholder='input handle' />
         <br />
         <input id='avatar' placeholder='paste url for avatar image' />
         <br />
