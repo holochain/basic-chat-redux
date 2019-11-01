@@ -172,15 +172,9 @@ export class View extends React.Component {
   handleSignal(signal) {
     console.log(JSON.stringify(signal.signal))
     if (signal.signal.name === 'new_message') {
-      console.log(JSON.stringify(signal.signal.name))
       const {conversationId} = JSON.parse(signal.signal.arguments)
-      console.log(JSON.parse(signal.signal.arguments))
-      console.log(conversationId)
+      // this can fail because the get might not be able to see the new message
       this.actions.getMessages(conversationId)
-    } else if (signal.signal.name === 'new_conversation_member') {
-      console.log(JSON.stringify(signal.signal.name))
-      const {conversationId} = JSON.parse(signal.signal.arguments)
-      this.actions.getConversationMembers(conversationId)
     }
   }
 

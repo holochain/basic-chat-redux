@@ -1,15 +1,8 @@
 use hdk::{
     entry_definition::ValidatingEntryType,
-    holochain_core_types::{
-        dna::entry_types::Sharing,
-    },
-    holochain_json_api::{
-        json::JsonString,
-        error::JsonError,
-    },
-    holochain_persistence_api::{
-        cas::content::Address
-    },
+    holochain_core_types::dna::entry_types::Sharing,
+    holochain_json_api::{error::JsonError, json::JsonString},
+    holochain_persistence_api::cas::content::Address,
 };
 
 pub mod handlers;
@@ -17,7 +10,7 @@ pub mod handlers;
 #[derive(Serialize, Deserialize, Debug, Clone, DefaultJson)]
 pub struct Member {
     pub address: Address,
-    pub profile: Profile
+    pub profile: Profile,
 }
 
 // This is the full profile that can be requested for a member

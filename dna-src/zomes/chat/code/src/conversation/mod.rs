@@ -1,13 +1,8 @@
 use hdk::{
     self,
     entry_definition::ValidatingEntryType,
-    holochain_core_types::{
-        dna::entry_types::Sharing,
-    },
-    holochain_json_api::{
-    	error::JsonError,
-        json::JsonString,
-    },
+    holochain_core_types::dna::entry_types::Sharing,
+    holochain_json_api::{error::JsonError, json::JsonString},
 };
 
 pub mod handlers;
@@ -15,14 +10,12 @@ pub mod handlers;
 #[derive(Serialize, Deserialize, Debug, Clone, DefaultJson)]
 pub struct Conversation {
     pub name: String,
-    pub description: String
+    pub description: String,
 }
 
 use crate::{
-    PUBLIC_STREAM_ENTRY,
+    MESSAGE_LINK_TYPE_TO, PUBLIC_STREAM_ENTRY, PUBLIC_STREAM_LINK_TYPE_FROM,
     PUBLIC_STREAM_LINK_TYPE_TO,
-    PUBLIC_STREAM_LINK_TYPE_FROM,
-    MESSAGE_LINK_TYPE_TO
 };
 
 pub fn public_conversation_definition() -> ValidatingEntryType {

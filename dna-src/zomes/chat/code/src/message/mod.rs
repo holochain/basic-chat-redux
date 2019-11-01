@@ -6,13 +6,10 @@ use hdk::{
         validation::EntryValidationData,
         // entry::Entry,
     },
-    holochain_json_api::{
-        json::JsonString,
-        error::JsonError,
-    },
+    holochain_json_api::{error::JsonError, json::JsonString},
 };
 
-use validator::{Validate};
+use validator::Validate;
 
 #[derive(Serialize, Deserialize, Debug, Clone, DefaultJson, Validate)]
 pub struct Message {
@@ -26,13 +23,13 @@ pub struct Message {
 
 impl Message {
     pub fn from_spec(spec: &MessageSpec, author: &String) -> Message {
-        return Message{
+        return Message {
             message_type: spec.message_type.clone(),
             payload: spec.payload.clone(),
             meta: spec.meta.clone(),
             author: author.to_owned(),
-            timestamp: spec.timestamp.clone()
-        }
+            timestamp: spec.timestamp.clone(),
+        };
     }
 }
 
@@ -41,12 +38,10 @@ pub struct MessageSpec {
     pub message_type: String,
     pub timestamp: u32,
     pub payload: String,
-    pub meta: String
+    pub meta: String,
 }
 
-use crate::{
-    MESSAGE_ENTRY,
-};
+use crate::MESSAGE_ENTRY;
 
 pub fn message_definition() -> ValidatingEntryType {
     entry!(

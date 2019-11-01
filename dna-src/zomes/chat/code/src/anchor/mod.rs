@@ -1,15 +1,8 @@
 use hdk::{
     entry_definition::ValidatingEntryType,
-    holochain_core_types::{
-        dna::entry_types::Sharing,
-    },
-    holochain_json_api::{
-        json::RawString,
-        json::JsonString,
-    },
+    holochain_core_types::dna::entry_types::Sharing,
+    holochain_json_api::{json::JsonString, json::RawString},
 };
-
-
 
 pub fn anchor_definition() -> ValidatingEntryType {
     entry!(
