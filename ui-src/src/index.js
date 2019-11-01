@@ -194,16 +194,44 @@ export class View extends React.Component {
       case 'new_convo_message':
         const { conversationAddress, message, messageAddress } = signalArgs
         this.ingestMessages(conversationAddress, [{entry: message, address: messageAddress}])
+        if (message.author !== this.state.user.id) {
+          this.sendDesktopNotification(`${this.state.users[message.author].name || '?'}: ${message.payload}`)
+        }
         break
       case 'join_convo_message':
         this.actions.getConversationMembers(signalArgs.conversationAddress)
+        if (signalArgs.agentAddress !== this.state.user.id) {
+          this.sendDesktopNotification(`someone joined the channel!`)
+        }
         break
       default:
         console.log('unrecognised signal type received')
     }
   }
 
+  sendDesktopNotification = (text) => {
+    let notification = new Notification('Holochain Peer Chat', {
+      body: text,
+      tag: 'holochain.peerchat.v1'
+    });
+    notification.onclick = function() {
+      window.focus();
+      this.close();
+    };
+    setTimeout(notification.close.bind(notification), 5000);
+  }
+
   componentDidMount () {
+    // set up browser notifications
+    if(Notification && Notification.permission === 'default') {
+      Notification.requestPermission(function (permission) {
+        if(!('permission' in Notification)) {
+          Notification.permission = permission;
+        }
+      });
+    }
+
+    // connect to holochain and hook up signals
     this.state.holochainConnection.then(({ callZome, call, onSignal }) => {
       console.log('holochainConnection')
       this.setState({ connected: true })
