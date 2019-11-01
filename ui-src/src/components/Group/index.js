@@ -1,6 +1,5 @@
 import React from 'react'
 import '../../index.css'
-import { GroupList } from '../GroupList'
 import { UserHeader } from '../UserHeader'
 import { UserList } from '../UserList'
 import { MessageList } from '../MessageList'
@@ -39,7 +38,6 @@ export const Group = ({
     <aside data-open={sidebarOpen}>
       <UserHeader user={user} />
       <menu>
-        <GroupList groups={groups} currentGroup={currentGroup} joinGroup={joinGroup} />
         <ConversationList
           user={user}
           conversations={conversations}
@@ -56,7 +54,7 @@ export const Group = ({
         conversation={conversation}
         user={user}
         sidebarOpen={sidebarOpen}
-        userListOpen={false}
+        userListOpen={userListOpen}
         setSidebar={setSidebar}
         setUserList={setUserList}
        />
@@ -71,7 +69,7 @@ export const Group = ({
               <CreateMessageForm user={user} conversation={conversation} message={''} runCommand={runCommand} sendMessage={sendMessage} getMessages={getMessages}/>
             </col->
             {userListOpen && (
-              <UserList conversation={conversation} users={users} setFullName={setFullName} />
+              <UserList conversation={conversation} users={users} />
             )}
           </row->
         ) : connected ? (

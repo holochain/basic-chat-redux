@@ -136,21 +136,6 @@ export class View extends React.Component {
         })
       },
 
-      setFullName: userId => {
-        console.log('Asked for First Name')
-        this.makeHolochainCall(INSTANCE_ID + '/chat/get_full_name', { agent_address: userId }, (result) => {
-          let name = result.Ok.body
-          let user = this.state.users[userId]
-          user.full_name = name
-          console.log(user)
-          this.setState({
-            users: { ...this.state.users, [userId]: user }
-          })
-
-          console.log('Asked for First Name', result.Ok.body)
-        })
-      },
-
       getConversations: () => {
         this.makeHolochainCall(INSTANCE_ID + '/chat/get_all_public_conversations', {}, (result) => {
           console.log('retrieved public conversations', result)
