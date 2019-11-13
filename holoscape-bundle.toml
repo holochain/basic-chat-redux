@@ -1,14 +1,16 @@
+bridges = []
+
 [[instances]]
 name = "Basic Chat Public"
 id = "__basic-chat-public"
 dna_hash = "QmYtMYK9Q3p7eAKgZCoNNktZuECkFjaCXaii2ZzirtHEKt"
-uri = "http://"
+uri = "file:./dna/basic-chat.dna.json"
 
 [[UIs]]
 name = "Basic Chat"
 id = "basic-chat-ui"
 ui_bundle_hash = "Qm34abcde"
-uri = "http://"
+uri = "file:./ui.zip"
 
 [[UIs.instance_references]]
 ui_handle = "basic-chat"
