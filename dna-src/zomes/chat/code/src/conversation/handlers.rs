@@ -33,7 +33,7 @@ fn notify_conversation(conversation_address: Address, message: DirectMessage) ->
                 JsonString::from(
                     message.clone()
                 ).into(),
-                10000.into(),
+                1.into(),
             )
             .ok();
         });
