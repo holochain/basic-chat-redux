@@ -36,7 +36,7 @@ or use the CLI directly
 ```
 mkdir -p dna
 cd dna-src
-hc package -o ../dna/peer-chat.hcpkg
+hc package -o ../dna/basic-chat.dna.json
 ```
 
 *Be careful!* If you are trying to network with other agents it is best to distribute a single compiled dna file. Any differences in compiler configuration may lead to the DNA hash being different and the nodes will not be able to communicate.
