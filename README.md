@@ -49,6 +49,17 @@ npm install
 npm start
 ```
 
+## Using with Holoscape
+
+If you want to use [Holoscape](https://github.com/holochain/holonix) (and you definitely should!) you can build a Holoscape ready package by running
+
+```
+npm run hc:make-holoscape
+```
+
+You can then use the holoscape-bundle in the project root to install. 
+ **Note: You most likely will need to change the DNA hash in the holoscape-bundle.toml file**
+
 ## Built With
 
 * [Holochain](https://developer.holochain.org/)
