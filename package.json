@@ -7,6 +7,6 @@
     "hc:start": "holochain -c ./conductor-config.toml",
     "hc:test": "cd dna-src && hc test"
   },
-  "author": "",
+  "author": "Willem Olding (willem.olding@holo.host)",
   "license": "GPL-3"
 }
