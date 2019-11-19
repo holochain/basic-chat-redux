@@ -5,7 +5,6 @@ extern crate hdk_proc_macros;
 #[macro_use]
 extern crate holochain_json_derive;
 extern crate serde;
-extern crate utils;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
@@ -27,6 +26,7 @@ pub mod anchor;
 pub mod conversation;
 pub mod member;
 pub mod message;
+mod utils;
 
 pub static MESSAGE_ENTRY: &str = "message";
 pub static MESSAGE_LINK_TYPE_TO: &str = "message_in";

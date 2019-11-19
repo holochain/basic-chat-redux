@@ -6,7 +6,7 @@ use hdk::{
     holochain_persistence_api::cas::content::Address,
     AGENT_ADDRESS,
 };
-use utils::{get_links_and_load_type, GetLinksLoadResult};
+use crate::utils::{get_links_and_load_type, GetLinksLoadResult};
 
 pub fn handle_register(name: String, avatar_url: String) -> ZomeApiResult<Address> {
     let anchor_entry = Entry::App("anchor".into(), RawString::from("member_directory").into());

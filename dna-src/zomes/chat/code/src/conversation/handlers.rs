@@ -1,4 +1,3 @@
-extern crate utils;
 use hdk::{
     self,
     error::ZomeApiResult,
@@ -16,9 +15,8 @@ use crate::{
     MESSAGE_ENTRY
 };
 use crate::conversation::Conversation;
-
 use crate::message;
-use utils::{get_links_and_load_type, GetLinksLoadResult};
+use crate::utils::{get_links_and_load_type, GetLinksLoadResult};
 
 
 
