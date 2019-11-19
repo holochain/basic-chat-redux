@@ -37,7 +37,6 @@ export const Group = ({
   <main>
     <aside data-open={sidebarOpen}>
       <UserHeader user={user} />
-      <menu>
         <ConversationList
           user={user}
           conversations={conversations}
@@ -46,7 +45,6 @@ export const Group = ({
           getConversations={getConversations}
           joinConversation={joinConversation}
         />
-      </menu>
       {user.id && <StartConversationForm submit={startConversation} currentGroup={currentGroup}/>}
     </aside>
     <section>

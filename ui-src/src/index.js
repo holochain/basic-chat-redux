@@ -210,9 +210,9 @@ export class View extends React.Component {
   }
 
   sendDesktopNotification = (text) => {
-    let notification = new Notification('Holochain Peer Chat', {
+    let notification = new Notification('Holochain Basic Chat', {
       body: text,
-      tag: 'holochain.peerchat.v1'
+      tag: 'holochain.basicchat.v1'
     });
     notification.onclick = function() {
       window.focus();

@@ -1,5 +1,5 @@
 {
-  "name": "peer-chat",
+  "name": "basic-chat",
   "version": "0.0.16",
   "dependencies": {
     "@holochain/hc-web-client": "^0.5.0",

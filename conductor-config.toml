@@ -8,16 +8,16 @@
 # -----------  DNAs  -----------
 
 [[dnas]]
-  id = "peer_chat_dna"
-  file = "./dna/peer-chat.dna.json"
-  hash = "QmYtMYK9Q3p7eAKgZCoNNktZuECkFjaCXaii2ZzirtHEKt"
+  id = "basic_chat_dna"
+  file = "./dna/basic-chat.dna.json"
+  hash = "QmRhrwefYEbbg4pxaNzJwZkgBSjgRc3mrvLPRoRt1UAgep"
 
 
 # -----------  Instances  -----------
 
 [[instances]]
   id = "basic-chat"
-  dna = "peer_chat_dna"
+  dna = "basic_chat_dna"
   agent = "test_agent1"
 [instances.storage]
   type = "memory"
