@@ -3,7 +3,7 @@ import style from './index.module.css'
 import Linkify from 'react-linkify'
 
 const time = timestamp => {
-  const date = new Date(timestamp * 1000)
+  const date = new Date(timestamp)
   const minutes = date.getMinutes()
   return `${date.getHours()}:${minutes < 10 ? '0' + minutes : minutes}`
 }

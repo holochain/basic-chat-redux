@@ -78,7 +78,7 @@ export class View extends React.Component {
       sendMessage: ({ text, conversationId }) => {
         const message = {
           message_type: 'text',
-          timestamp: Math.floor(Date.now() / 1000),
+          timestamp: Date.now(),
           payload: text,
           meta: ''
         }

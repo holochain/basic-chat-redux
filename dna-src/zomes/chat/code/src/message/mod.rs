@@ -11,9 +11,11 @@ use hdk::{
 
 use validator::Validate;
 
+/// This struct is serialized internally to a message entry. All message entries
+/// must be serializable to this struct to be valid
 #[derive(Serialize, Deserialize, Debug, Clone, DefaultJson, Validate, PartialEq)]
 pub struct Message {
-    pub timestamp: u32,
+    pub timestamp: u64,
     pub author: String,
     pub message_type: String,
     #[validate(length(min = 1, max = 1024))]
@@ -33,10 +35,12 @@ impl Message {
     }
 }
 
+/// This is the data needed to create a Message entry (e.g. the specification of a message)
+/// but not the actual message entry itself
 #[derive(Serialize, Deserialize, Debug, Clone, DefaultJson)]
 pub struct MessageSpec {
     pub message_type: String,
-    pub timestamp: u32,
+    pub timestamp: u64,
     pub payload: String,
     pub meta: String,
 }
