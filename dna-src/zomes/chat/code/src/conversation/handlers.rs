@@ -12,7 +12,8 @@ use crate::{
     DirectMessage,
     NotificationSignalPayload,
     JoinChannelSignalPayload,
-    MESSAGE_ENTRY
+    MESSAGE_ENTRY,
+    PUBLIC_STREAM_LINK_TYPE_TO,
 };
 use crate::conversation::Conversation;
 use crate::message;
@@ -97,12 +98,10 @@ pub fn handle_start_conversation(
     members_to_add.extend(initial_members);
     for member in members_to_add {
         if !existing_members.contains(&member) {
-            hdk::utils::link_entries_bidir(
-                &member,
+            hdk::link_entries(
                 &conversation_address,
-                "member_of",
-                "has_member",
-                "",
+                &AGENT_ADDRESS,
+                PUBLIC_STREAM_LINK_TYPE_TO,
                 "",
             )?;
         }
@@ -113,12 +112,10 @@ pub fn handle_start_conversation(
 pub fn handle_join_conversation(conversation_address: Address) -> ZomeApiResult<()> {
     let existing_members = handle_get_members(conversation_address.clone())?;
     if !existing_members.contains(&AGENT_ADDRESS) {
-        hdk::utils::link_entries_bidir(
-            &AGENT_ADDRESS,
+        hdk::link_entries(
             &conversation_address,
-            "member_of",
-            "has_member",
-            "",
+            &AGENT_ADDRESS,
+            PUBLIC_STREAM_LINK_TYPE_TO,
             "",
         )?;
     }
