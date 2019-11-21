@@ -30,64 +30,13 @@ module.exports = scenario => {
     meta: '{}',
   }
 
-  async function create_persona_profile(s, t, player, handle, avatar, fullName) {
-    console.log('create_persona_profile')
-    const result_get_my_member_profile = await player.call('chat', 'chat', 'get_my_member_profile', {})
-    const sourceDna = result_get_my_member_profile.Err.Internal
-    console.log('sourceDna ' + JSON.stringify(sourceDna))
-    const result = await player.call('personas', 'personas', 'create_persona', {spec: {name: 'Personal'}})
-    const persona_address = result.Ok
-    const field_handle = await player.call('personas', 'personas', 'add_field', {persona_address: persona_address, field: {name: 'handle', data: handle}})
-    console.log(field_handle)
-    await player.call('personas', 'personas', 'add_field', {persona_address: persona_address, field: {name: 'avatar', data: avatar}})
-    await player.call('personas', 'personas', 'add_field', {persona_address: persona_address, field: {name: 'full_name', data: fullName}})
-    await s.consistency()
-
-    // can call the function to create a mapping
-    await player.call('personas', 'profiles', 'create_mapping',
-      {
-        mapping: {
-          retrieverDna: sourceDna,
-          profileFieldName: 'handle',
-          personaAddress: persona_address,
-          personaFieldName: 'handle'
-        }
-    })
-    await player.call('personas', 'profiles', 'create_mapping',
-      {
-        mapping: {
-          retrieverDna: sourceDna,
-          profileFieldName: 'avatar',
-          personaAddress: persona_address,
-          personaFieldName: 'avatar'
-        }
-    })
-    await player.call('personas', 'profiles', 'create_mapping',
-      {
-        mapping: {
-          retrieverDna: sourceDna,
-          profileFieldName: 'full_name',
-          personaAddress: persona_address,
-          personaFieldName: 'full_name'
-        }
-    })
-    await player.call('personas', 'profiles', 'create_mapping',
-      {
-        mapping: {
-          retrieverDna: sourceDna,
-          profileFieldName: 'last_name',
-          personaAddress: persona_address,
-          personaFieldName: 'last_name'
-        }
-    })
-    await s.consistency()
-  }
 
   scenario('4 Agents chatting', async (s, t) => {
     const {player1} = await s.players({player1: config1}, false)
     await player1.spawn()
-    // await player1.kill()
-    await create_persona_profile(s, t, player1, '@philt3r', 'avatar', 'Philip Beadle')
+    await player1.call('chat', 'chat', 'register', {name: 'player1', avatar_url: ''})
+    await s.consistency() 
+
     const create_result = await player1.call('chat', 'chat', 'start_conversation', convoHoloscape)
     await s.consistency()
     console.log(create_result)
@@ -96,9 +45,11 @@ module.exports = scenario => {
     console.log(post_result)
     t.notEqual(post_result.Ok, undefined, 'post should return Ok')
 
-    const {player2} = await s.players({player2: config2}, false)
+    const {player2} = await s.players({player2: config1}, false)
     await player2.spawn()
-    await create_persona_profile(s, t, player2, '@wollum', 'avatar', 'Willem Olding')
+    await player2.call('chat', 'chat', 'register', {name: 'player2', avatar_url: ''})
+    await s.consistency() 
+
     const public_conversations_result = await player2.call('chat', 'chat', 'get_all_public_conversations', {})
     console.log(public_conversations_result.Ok)
     const holoscape_convo_address = public_conversations_result.Ok[0].address
@@ -113,9 +64,11 @@ module.exports = scenario => {
     console.log(get_message_result)
     t.deepEqual(get_message_result.Ok.length, 2, 'a message from player1 and player2')
 
-    const {player3} = await s.players({player3: config3}, false)
+    const {player3} = await s.players({player3: config1}, false)
     await player3.spawn()
-    await create_persona_profile(s, t, player3, 'Art', 'avatar', 'Arthur Brock')
+    await player3.call('chat', 'chat', 'register', {name: 'player3', avatar_url: ''})
+    await s.consistency() 
+
     const player3_public_conversations_result = await player3.call('chat', 'chat', 'get_all_public_conversations', {})
     console.log(player3_public_conversations_result.Ok)
     const player3_holoscape_convo_address = player3_public_conversations_result.Ok[0].address
@@ -134,9 +87,11 @@ module.exports = scenario => {
     console.log(player3_get_message_result_2)
     t.deepEqual(player3_get_message_result_2.Ok.length, 3, 'Player 3 sees 2 messages from player1 and 1 from player2')
 
-    const {player4} = await s.players({player4: config4}, false)
+    const {player4} = await s.players({player4: config1}, false)
     await player4.spawn()
-    await create_persona_profile(s, t, player4, 'lucksus', 'avatar', 'Nicholas Luck')
+    await player4.call('chat', 'chat', 'register', {name: 'player4', avatar_url: ''})
+    await s.consistency() 
+ 
     const player4_public_conversations_result = await player4.call('chat', 'chat', 'get_all_public_conversations', {})
     console.log(player4_public_conversations_result.Ok)
     const player4_holoscape_convo_address = player4_public_conversations_result.Ok[0].address
