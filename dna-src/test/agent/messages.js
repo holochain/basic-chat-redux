@@ -47,19 +47,6 @@ module.exports = scenario => {
 
   const { config1 } = require('../config')
 
-  // scenario('General Chat conversation created by default', async (s, t) => {
-  //   const {player1} = await s.players({player1: config1}, true)
-  //   const register_result = await player1.call('chat', 'chat', 'register', {name: 'player1', avatar_url: ''})
-  //   await s.consistency()
-  //   console.log(register_result)
-  //   t.equal(register_result.Ok.length, 63)
-  //
-  //   const default_conversations = await player1.call('chat', 'chat', 'get_all_public_conversations', {})
-  //   await s.consistency()
-  //   console.log(default_conversations)
-  //   t.deepEqual(default_conversations.Ok.length, 1)
-  // })
-
   scenario('Can post a message to the conversation and retrieve', async (s, t) => {
     const {player1} = await s.players({player1: config1}, true)
     const register_result = await player1.call('chat', 'chat', 'register', {name: 'player1', avatar_url: ''})
@@ -78,7 +65,7 @@ module.exports = scenario => {
     console.log(post_result)
     t.notEqual(post_result.Ok, undefined, 'post should return Ok')
 
-    const get_message_result = await player1.call('chat', 'chat', 'get_messages', {conversation_address: conversation_addr})
+    const get_message_result = await player1.call('chat', 'chat', 'get_messages', {address: conversation_addr})
     await s.consistency()
     console.log(get_message_result)
     t.deepEqual(get_message_result.Ok[0].entry.payload, testMessage.payload, 'expected to receive the message back')
