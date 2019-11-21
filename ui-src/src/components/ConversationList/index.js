@@ -23,9 +23,8 @@ export const ConversationList = ({
 
   return (<ul className={style.component}>
     {conversations.map(conversation => {
-      const messageKeys = Object.keys(messages[conversation.id] || {})
-      const latestMessage =
-        messageKeys.length > 0 && messages[conversation.id][messageKeys.pop()]
+      const convoMessages = (messages[conversation.id] || [])
+      const latestMessage = convoMessages.sort((a, b) => { return b.createdAt - a.createdAt })[0]
       return (
         <li
           key={conversation.id}

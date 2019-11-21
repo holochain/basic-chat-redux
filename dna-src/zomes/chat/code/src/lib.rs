@@ -136,9 +136,8 @@ pub mod chat {
     pub fn start_conversation(
         name: String,
         description: String,
-        initial_members: Vec<Address>,
     ) -> ZomeApiResult<Address> {
-        conversation::handlers::handle_start_conversation(name, description, initial_members)
+        conversation::handlers::handle_start_conversation(name, description)
     }
 
     #[zome_fn("hc_public")]

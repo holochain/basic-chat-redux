@@ -41,8 +41,6 @@ module.exports = scenario => {
   const testNewChannelParams = {
     name: 'test new conversation',
     description: 'for testing...',
-    initial_members: [],
-    public: true
   }
 
   const { config1 } = require('../config')

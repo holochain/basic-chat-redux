@@ -66,50 +66,26 @@ fn notify_conversation_join(conversation_address: Address) -> ZomeApiResult<()> 
 pub fn handle_start_conversation(
     name: String,
     description: String,
-    initial_members: Vec<Address>,
 ) -> ZomeApiResult<Address> {
     let conversation = Conversation { name, description };
     let entry = Entry::App("public_conversation".into(), conversation.into());
-
-    // first see if this converstion already exists.
-    // while the entry will de-dup, the links will not adding useless data to the DHT.
-    // There is also the possibility this chat has already been created but we just don't see it.
-    // In this case there is nothing we can do except add it again and de-dup
-    // in the get_channels zome function
-    let conversation_address = entry.address();
-    if hdk::get_entry(&conversation_address)?.is_none() {
-        hdk::commit_entry(&entry)?;
-        let anchor_entry = Entry::App(
-            "anchor".into(),
-            RawString::from("public_conversations").into(),
-        );
-        let anchor_address = hdk::commit_entry(&anchor_entry)?;
-        hdk::link_entries(
-            &anchor_address,
-            &conversation_address,
-            "public_conversation",
-            "",
-        )?;
-    }
-    let existing_members = handle_get_members(conversation_address.clone())?;
-
-    // add the new members (including the creator)
-    let mut members_to_add = vec![Address::from(AGENT_ADDRESS.to_string())];
-    members_to_add.extend(initial_members);
-    for member in members_to_add {
-        if !existing_members.contains(&member) {
-            hdk::link_entries(
-                &conversation_address,
-                &AGENT_ADDRESS,
-                PUBLIC_STREAM_LINK_TYPE_TO,
-                "",
-            )?;
-        }
-    }
+    let conversation_address = hdk::commit_entry(&entry)?;
+    let anchor_entry = Entry::App(
+        "anchor".into(),
+        RawString::from("public_conversations").into(),
+    );
+    let anchor_address = hdk::commit_entry(&anchor_entry)?;
+    hdk::link_entries(
+        &anchor_address,
+        &conversation_address,
+        "public_conversation",
+        "",
+    )?;
     Ok(conversation_address)
 }
 
 pub fn handle_join_conversation(conversation_address: Address) -> ZomeApiResult<()> {
+    // instead query the local chain to see if we have already joined!
     let existing_members = handle_get_members(conversation_address.clone())?;
     if !existing_members.contains(&AGENT_ADDRESS) {
         hdk::link_entries(

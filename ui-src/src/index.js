@@ -104,7 +104,6 @@ export class View extends React.Component {
         const conversationSpec = {
           name: options.name,
           description: '',
-          initial_members: []
         }
         this.makeHolochainCall(INSTANCE_ID + '/chat/start_conversation', conversationSpec, (result) => {
           console.log('created conversation', result)
