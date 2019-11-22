@@ -6,7 +6,7 @@
     "hc:build": "rm -rf tmp-storage && mkdir -p ./dna && cd dna-src && hc package -o ../dna/basic-chat.dna.json",
     "hc:start": "holochain -c ./conductor-config.toml",
     "hc:test": "sim2h_server & cd dna-src && TEST_NETWORK_TYPE=sim2h hc test",
-    "hc:make-holoscape": "npm run hc:build && cd ui-src && npm run build && cd .. && zip -r ui.zip ./ui"
+    "hc:make-holoscape": "npm run hc:build && rm ui.zip && rm -rf ./ui && cd ui-src && npm run build && cd .. && cd ./ui && zip -r ../ui.zip ./*"
   },
   "author": "Willem Olding (willem.olding@holo.host)",
   "license": "GPL-3"

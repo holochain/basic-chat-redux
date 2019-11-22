@@ -15,6 +15,7 @@ use crate::{
     JoinChannelSignalPayload,
     MESSAGE_ENTRY,
     PUBLIC_STREAM_LINK_TYPE_TO,
+    signal_ui,
 };
 use crate::conversation::Conversation;
 use crate::message;
@@ -27,15 +28,20 @@ fn notify_conversation(conversation_address: Address, message: DirectMessage) ->
     handle_get_members(conversation_address.clone())?
         .iter()
         .for_each(|member_id| {
-            hdk::debug(format!("Send a message to: {:?}", &member_id.to_string())).ok();
-            hdk::send(
-                member_id.clone(),
-                JsonString::from(
-                    message.clone()
-                ).into(),
-                1.into(),
-            )
-            .ok();
+            if member_id == &Address::from(AGENT_ADDRESS.to_string()) { // don't waste resources and just trigger a signal directly
+                signal_ui(&message);
+            } else {
+                hdk::debug(format!("Send a message to: {:?}", &member_id.to_string())).ok();
+                hdk::send(
+                    member_id.clone(),
+                    JsonString::from(
+                        message.clone()
+                    ).into(),
+                    1.into(),
+                )
+                .ok();
+            }
+
         });
     Ok(())
 }

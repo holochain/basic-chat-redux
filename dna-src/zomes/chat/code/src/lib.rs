@@ -66,6 +66,25 @@ struct NamePayload {
     name: String,
 }
 
+pub (crate) fn signal_ui(message: &DirectMessage) {
+    match message {
+        DirectMessage::ChannelMessageNotification(signal_payload) => {
+            // send a signal to the UI which it can use to reactively display messages
+            hdk::emit_signal(
+                CHANNEL_MESSAGE_SIGNAL_TYPE,
+                signal_payload,
+            ).ok();
+        },
+        DirectMessage::JoinChannelNotification(signal_payload) => {
+            // signal the UI that a new agent has joined
+            hdk::emit_signal(
+                JOIN_CHANNEL_SIGNAL_TYPE,
+                signal_payload,
+            ).ok();
+        }
+    };
+}
+
 #[zome]
 pub mod chat {
 
@@ -86,22 +105,7 @@ pub mod chat {
         match maybe_message {
             Err(err) => format!("Err({})", err),
             Ok(message) => {
-            	match message {
-	                DirectMessage::ChannelMessageNotification(signal_payload) => {
-	                    // send a signal to the UI which it can use to reactively display messages
-	                    hdk::emit_signal(
-	                        CHANNEL_MESSAGE_SIGNAL_TYPE,
-	                        signal_payload,
-	                    ).ok();
-	                },
-	                DirectMessage::JoinChannelNotification(signal_payload) => {
-	                	// signal the UI that a new agent has joined
-	                    hdk::emit_signal(
-	                        JOIN_CHANNEL_SIGNAL_TYPE,
-	                        signal_payload,
-	                    ).ok();
-	                }
-	            };
+            	signal_ui(&message);
 	            String::from("Ok")
             },
         }
