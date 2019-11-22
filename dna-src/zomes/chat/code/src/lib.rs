@@ -32,7 +32,6 @@ pub static MESSAGE_ENTRY: &str = "message";
 pub static MESSAGE_LINK_TYPE_TO: &str = "message_in";
 pub static PUBLIC_STREAM_ENTRY: &str = "public_conversation";
 pub static PUBLIC_STREAM_LINK_TYPE_TO: &str = "has_member";
-pub static PUBLIC_STREAM_LINK_TYPE_FROM: &str = "member_of";
 
 pub const CHANNEL_MESSAGE_SIGNAL_TYPE: &str = "new_convo_message";
 pub const JOIN_CHANNEL_SIGNAL_TYPE: &str = "join_convo_message";
@@ -137,9 +136,8 @@ pub mod chat {
     pub fn start_conversation(
         name: String,
         description: String,
-        initial_members: Vec<Address>,
     ) -> ZomeApiResult<Address> {
-        conversation::handlers::handle_start_conversation(name, description, initial_members)
+        conversation::handlers::handle_start_conversation(name, description)
     }
 
     #[zome_fn("hc_public")]

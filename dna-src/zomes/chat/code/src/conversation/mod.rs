@@ -14,7 +14,7 @@ pub struct Conversation {
 }
 
 use crate::{
-    MESSAGE_LINK_TYPE_TO, PUBLIC_STREAM_ENTRY, PUBLIC_STREAM_LINK_TYPE_FROM,
+    MESSAGE_LINK_TYPE_TO, PUBLIC_STREAM_ENTRY,
     PUBLIC_STREAM_LINK_TYPE_TO,
 };
 
@@ -36,18 +36,6 @@ pub fn public_conversation_definition() -> ValidatingEntryType {
             to!(
                 "%agent_id",
                 link_type: PUBLIC_STREAM_LINK_TYPE_TO,
-
-                validation_package: || {
-                    hdk::ValidationPackageDefinition::Entry
-                },
-
-                validation: |_validation_data: hdk::LinkValidationData| {
-                    Ok(())
-                }
-            ),
-            from!(
-                "%agent_id",
-                link_type: PUBLIC_STREAM_LINK_TYPE_FROM,
 
                 validation_package: || {
                     hdk::ValidationPackageDefinition::Entry

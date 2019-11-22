@@ -1,10 +1,11 @@
 use hdk::{
     self,
     error::ZomeApiResult,
-    holochain_core_types::{entry::Entry, link::LinkMatch},
+    holochain_core_types::{entry::Entry, link::{LinkMatch, link_data::LinkData, LinkActionKind}},
     holochain_json_api::json::{JsonString, RawString},
     holochain_persistence_api::cas::content::{Address, AddressableContent},
     AGENT_ADDRESS,
+    prelude::{QueryResult, QueryArgsOptions},
 
 };
 use std::collections::HashSet;
@@ -12,7 +13,8 @@ use crate::{
     DirectMessage,
     NotificationSignalPayload,
     JoinChannelSignalPayload,
-    MESSAGE_ENTRY
+    MESSAGE_ENTRY,
+    PUBLIC_STREAM_LINK_TYPE_TO,
 };
 use crate::conversation::Conversation;
 use crate::message;
@@ -65,64 +67,65 @@ fn notify_conversation_join(conversation_address: Address) -> ZomeApiResult<()> 
 pub fn handle_start_conversation(
     name: String,
     description: String,
-    initial_members: Vec<Address>,
 ) -> ZomeApiResult<Address> {
     let conversation = Conversation { name, description };
     let entry = Entry::App("public_conversation".into(), conversation.into());
-
-    // first see if this converstion already exists.
-    // while the entry will de-dup, the links will not adding useless data to the DHT.
-    // There is also the possibility this chat has already been created but we just don't see it.
-    // In this case there is nothing we can do except add it again and de-dup
-    // in the get_channels zome function
-    let conversation_address = entry.address();
-    if hdk::get_entry(&conversation_address)?.is_none() {
-        hdk::commit_entry(&entry)?;
-        let anchor_entry = Entry::App(
-            "anchor".into(),
-            RawString::from("public_conversations").into(),
-        );
-        let anchor_address = hdk::commit_entry(&anchor_entry)?;
-        hdk::link_entries(
-            &anchor_address,
-            &conversation_address,
-            "public_conversation",
-            "",
-        )?;
-    }
-    let existing_members = handle_get_members(conversation_address.clone())?;
-
-    // add the new members (including the creator)
-    let mut members_to_add = vec![Address::from(AGENT_ADDRESS.to_string())];
-    members_to_add.extend(initial_members);
-    for member in members_to_add {
-        if !existing_members.contains(&member) {
-            hdk::utils::link_entries_bidir(
-                &member,
-                &conversation_address,
-                "member_of",
-                "has_member",
-                "",
-                "",
-            )?;
-        }
-    }
+    let conversation_address = hdk::commit_entry(&entry)?;
+    let anchor_entry = Entry::App(
+        "anchor".into(),
+        RawString::from("public_conversations").into(),
+    );
+    let anchor_address = hdk::commit_entry(&anchor_entry)?;
+    hdk::link_entries(
+        &anchor_address,
+        &conversation_address,
+        "public_conversation",
+        "",
+    )?;
+    handle_join_conversation(conversation_address.clone())?;
     Ok(conversation_address)
 }
 
+fn entry_is_link_between(entry: &Entry, base: &Address, target: &Address) -> bool {
+    if let Entry::LinkAdd(LinkData{
+        action_kind: LinkActionKind::ADD,
+        link,
+        ..
+    }) = entry {
+        if link.base() == base && link.target() == target {
+            return true
+        }
+    }
+    false
+}
+
+/// An agent is a member of a channel if the have created a link between it and themselves in their local chain
+fn agent_is_member_of_channel(agent_addr: &Address, conversation_address: &Address) -> ZomeApiResult<bool> {
+    if let QueryResult::Entries(results) = hdk::query_result(
+        "%link_add".into(),
+        QueryArgsOptions{ entries: true, ..Default::default()}
+    )? {
+        Ok(
+            results.iter().any(|(_, entry)| entry_is_link_between(entry, conversation_address, agent_addr))
+        )
+    } else {
+        unreachable!()
+    }
+}
+
 pub fn handle_join_conversation(conversation_address: Address) -> ZomeApiResult<()> {
-    let existing_members = handle_get_members(conversation_address.clone())?;
-    if !existing_members.contains(&AGENT_ADDRESS) {
-        hdk::utils::link_entries_bidir(
-            &AGENT_ADDRESS,
+    if !agent_is_member_of_channel(&AGENT_ADDRESS, &conversation_address)? {
+        hdk::debug("Joining channel!").ok();
+        hdk::link_entries(
             &conversation_address,
-            "member_of",
-            "has_member",
-            "",
+            &AGENT_ADDRESS,
+            PUBLIC_STREAM_LINK_TYPE_TO,
             "",
         )?;
+        notify_conversation_join(conversation_address)?;
+    } else {
+        hdk::debug("Already a member of channel!")?;
     }
-    notify_conversation_join(conversation_address)?;
     Ok(())
 }
 
