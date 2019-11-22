@@ -1,10 +1,11 @@
 use hdk::{
     self,
     error::ZomeApiResult,
-    holochain_core_types::{entry::Entry, link::LinkMatch},
+    holochain_core_types::{entry::Entry, link::{LinkMatch, link_data::LinkData, LinkActionKind}},
     holochain_json_api::json::{JsonString, RawString},
     holochain_persistence_api::cas::content::{Address, AddressableContent},
     AGENT_ADDRESS,
+    prelude::{QueryResult, QueryArgsOptions},
 
 };
 use std::collections::HashSet;
@@ -81,21 +82,50 @@ pub fn handle_start_conversation(
         "public_conversation",
         "",
     )?;
+    handle_join_conversation(conversation_address.clone())?;
     Ok(conversation_address)
 }
 
+fn entry_is_link_between(entry: &Entry, base: &Address, target: &Address) -> bool {
+    if let Entry::LinkAdd(LinkData{
+        action_kind: LinkActionKind::ADD,
+        link,
+        ..
+    }) = entry {
+        if link.base() == base && link.target() == target {
+            return true
+        }
+    }
+    false
+}
+
+/// An agent is a member of a channel if the have created a link between it and themselves in their local chain
+fn agent_is_member_of_channel(agent_addr: &Address, conversation_address: &Address) -> ZomeApiResult<bool> {
+    if let QueryResult::Entries(results) = hdk::query_result(
+        "%link_add".into(),
+        QueryArgsOptions{ entries: true, ..Default::default()}
+    )? {
+        Ok(
+            results.iter().any(|(_, entry)| entry_is_link_between(entry, conversation_address, agent_addr))
+        )
+    } else {
+        unreachable!()
+    }
+}
+
 pub fn handle_join_conversation(conversation_address: Address) -> ZomeApiResult<()> {
-    // instead query the local chain to see if we have already joined!
-    let existing_members = handle_get_members(conversation_address.clone())?;
-    if !existing_members.contains(&AGENT_ADDRESS) {
+    if !agent_is_member_of_channel(&AGENT_ADDRESS, &conversation_address)? {
+        hdk::debug("Joining channel!").ok();
         hdk::link_entries(
             &conversation_address,
             &AGENT_ADDRESS,
             PUBLIC_STREAM_LINK_TYPE_TO,
             "",
         )?;
+        notify_conversation_join(conversation_address)?;
+    } else {
+        hdk::debug("Already a member of channel!")?;
     }
-    notify_conversation_join(conversation_address)?;
     Ok(())
 }
 
