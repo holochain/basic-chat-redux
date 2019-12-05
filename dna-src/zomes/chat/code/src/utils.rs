@@ -63,7 +63,7 @@ pub fn get_links_and_load_type<R: TryFrom<AppEntryValue>>(
         .collect())
 }
 
-pub trait DagStore {
+pub trait DagList {
     fn author<E: Into<JsonString> + Clone>(
         &mut self,
         content: E,
@@ -71,23 +71,31 @@ pub trait DagStore {
         prev_foreign: Option<Address>,
     ) -> ZomeApiResult<Address>;
 
+    fn global_root_address(&self) -> Address;
+
+    fn author_root_address(&self) -> Address;
+
     fn most_recent_authored(&self) -> Option<Address>;
 
-    // fn get_prev_authored(address: &Address) -> Option<Address>;
-    // fn get_prev_foreign(address: &Address) -> Option<Address>;
+    fn get_prev_authored(&self, address: &Address) -> Option<Address>;
+
+    fn get_prev_foreign(&self, address: &Address) -> Option<Address>;
+
     fn get_next(&self, address: &Address) -> Vec<Address>;
 
     fn add_content_dag<E: Into<JsonString> + Clone>(&mut self, content: E) -> ZomeApiResult<Address> {
         // get the most recent address of entry this agent authored (or some starting point)
-        let most_recent_authored = self.most_recent_authored();
+        let most_recent_authored = self.most_recent_authored()
+            .unwrap_or(self.author_root_address());
         // get the entries after this one all the way to the tip (or some starting point)
-        let most_recent_foreign = self.get_content_dag(most_recent_authored.clone(), None, None)?.0.last().cloned();
-        self.author(content, most_recent_authored, most_recent_foreign)
+        let most_recent_foreign = self.get_content_dag(Some(most_recent_authored.clone()), None, None)?.0.last().cloned()
+            .unwrap_or(self.global_root_address());
+        self.author(content, Some(most_recent_authored), Some(most_recent_foreign))
     }
 
     fn get_content_dag(&self, since: Option<Address>, limit: Option<usize>, _backsteps: Option<usize>) -> ZomeApiResult<(Vec<Address>, bool)> {
         // step back to find some suitable starting entries (skip for now and just use current)
-        let current = since.unwrap();
+        let current = since.unwrap_or(self.global_root_address());
 
         // traverse the unknown graph and store the result
         // uses non-recursive DFS topological sort 
@@ -101,7 +109,7 @@ pub trait DagStore {
             if postprocess {
                 sort_stack.push(current.clone());
             } else {
-                visited.insert(current.clone());
+                // push a second time but with post_process=true
                 to_visit.push((current.clone(), true));
                 // this is for the limit feature. Need to account for nodes we will post process
                 // as well as those done already + the current node
@@ -110,7 +118,8 @@ pub trait DagStore {
                 for next in self.get_next(&current) {
                     if !visited.contains(&next) {
                         if !(limit.is_some() && count_so_far >= limit.unwrap()) {
-                            to_visit.push((next, false));
+                            to_visit.push((next.clone(), false));
+                            visited.insert(next);
                         } else {
                             more = true;
                         }
@@ -119,6 +128,7 @@ pub trait DagStore {
             }
         }
         sort_stack.reverse();
+        sort_stack.retain(|x| !(x == &self.author_root_address() || x == &self.global_root_address()));
         Ok((sort_stack, more))
     }
 }
@@ -133,18 +143,24 @@ pub mod tests {
     struct TestStore{
         entry_store: HashMap<Address, JsonString>, 
         forward_link_store: HashMap<Address, Vec<Address>>,
+        prev_authored_link_store: HashMap<Address, Address>,
+        prev_foreign_link_store: HashMap<Address, Address>,
+        author_list: Vec<Address>,
     }
 
     impl TestStore {
         fn new() -> Self {
-            Self{
+            Self {
                 entry_store: HashMap::new(),
                 forward_link_store: HashMap::new(),
+                prev_authored_link_store: HashMap::new(),
+                prev_foreign_link_store: HashMap::new(),
+                author_list: Vec::new(),
             }
         }
     }
 
-    impl DagStore for TestStore {
+    impl DagList for TestStore {
         fn author<E: Into<JsonString> + Clone>(
             &mut self,
             content: E,
@@ -155,24 +171,62 @@ pub mod tests {
             // add the new entry
             self.entry_store.insert(entry_address.clone(), content.into());
             self.forward_link_store.insert(entry_address.clone(), Vec::new());
-            // add the links from previous entries
+            // add the links from and to previous entries
             if let Some(prev_authored) = prev_authored {
+                if self.forward_link_store.get(&prev_authored).is_none() {
+                    self.forward_link_store.insert(prev_authored.clone(), Vec::new());
+                }
                 self.forward_link_store.get_mut(&prev_authored).unwrap().push(entry_address.clone());
+                self.prev_authored_link_store.insert(entry_address.clone(), prev_authored);
             }
             if let Some(prev_foreign) = prev_foreign {
+                if self.forward_link_store.get(&prev_foreign).is_none() {
+                    self.forward_link_store.insert(prev_foreign.clone(), Vec::new());
+                }
                 self.forward_link_store.get_mut(&prev_foreign).unwrap().push(entry_address.clone());
+                self.prev_foreign_link_store.insert(entry_address.clone(), prev_foreign);
             }
+            // add to the author list
+            self.author_list.push(entry_address.clone());
             Ok(entry_address)
         }
 
+        fn global_root_address(&self) -> Address {
+            Address::from("global_root")
+        }
+
+        fn author_root_address(&self) -> Address {
+            Address::from("agent_root")
+        }
+
+        fn get_prev_authored(&self, address: &Address) -> Option<Address> {
+            self.prev_authored_link_store.get(address).cloned()
+        }
+    
+        fn get_prev_foreign(&self, address: &Address) -> Option<Address> {
+            self.prev_foreign_link_store.get(address).cloned()
+        }
+
         fn most_recent_authored(&self) -> Option<Address> {
-            None
+            self.author_list.last().cloned()
         }
 
         fn get_next(&self, address: &Address) -> Vec<Address> {
             self.forward_link_store.get(address).unwrap_or(&Vec::new()).to_vec()
         }
     }
+
+
+    #[test]
+    fn test_get_nothing() {
+        let store = TestStore::new();
+        // This retrieves everything
+        assert_eq!(
+            store.get_content_dag(None, None, None),
+            Ok((vec![], false)),
+        );
+    }
+
 
     #[test]
     fn test_get_singleton() {
@@ -254,6 +308,29 @@ pub mod tests {
         assert_eq!(
             store.get_content_dag(Some(addr0.clone()), Some(3), None),
             Ok((vec![addr0, addr1.clone(), addr10.clone()], true)),
+        );
+    }
+
+    #[test]
+    fn test_add_single_content_dag() {
+        let mut store = TestStore::new();
+        let addr = store.add_content_dag(0).unwrap();
+        assert_eq!(
+            store.get_content_dag(None, None, None),
+            Ok((vec![addr], false)),
+        );
+    }
+
+    #[test]
+    fn test_add_chain_content_dag() {
+        let mut store = TestStore::new();
+        let addr0 = store.add_content_dag(0).unwrap();
+        let addr1 = store.add_content_dag(1).unwrap();
+        let addr2 = store.add_content_dag(2).unwrap();
+
+        assert_eq!(
+            store.get_content_dag(None, None, None),
+            Ok((vec![addr0, addr1, addr2], false)),
         );
     }
 }
