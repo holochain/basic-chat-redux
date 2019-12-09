@@ -185,8 +185,10 @@ pub mod chat {
 
     #[zome_fn("hc_public")]
     pub fn get_messages(
-        address: Address,
+        conversation_address: Address,
+        since: Option<Address>,
+        limit: Option<usize>,
     ) -> ZomeApiResult<Vec<GetLinksLoadResult<message::Message>>> {
-        conversation::handlers::handle_get_messages(address)
+        conversation::handlers::handle_get_messages(conversation_address, since, limit)
     }
 }

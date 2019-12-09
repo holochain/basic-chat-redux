@@ -3,7 +3,7 @@ use hdk::{
     error::ZomeApiResult,
     holochain_core_types::{entry::Entry, link::{LinkMatch, link_data::LinkData, LinkActionKind}},
     holochain_json_api::json::{JsonString, RawString},
-    holochain_persistence_api::cas::content::{Address, AddressableContent},
+    holochain_persistence_api::cas::content::{Address},
     AGENT_ADDRESS,
     prelude::{QueryResult, QueryArgsOptions},
 
@@ -14,7 +14,6 @@ use crate::{
     DirectMessage,
     NotificationSignalPayload,
     JoinChannelSignalPayload,
-    MESSAGE_ENTRY,
     PUBLIC_STREAM_LINK_TYPE_TO,
     signal_ui,
 };
@@ -48,15 +47,12 @@ fn notify_conversation(conversation_address: Address, message: DirectMessage) ->
     Ok(())
 }
 
-fn notify_conversation_message(conversation_address: Address, message: message::Message) -> ZomeApiResult<()> {
+fn notify_conversation_message(conversation_address: Address, message: message::Message, message_address: Address) -> ZomeApiResult<()> {
     let message = DirectMessage::ChannelMessageNotification(
         NotificationSignalPayload{
             conversation_address: conversation_address.clone(),
             message: message.clone(),
-            message_address: Entry::App(
-                MESSAGE_ENTRY.into(),
-                message.clone().into()
-            ).address()
+            message_address,
         }
     );
     notify_conversation(conversation_address, message)
@@ -146,23 +142,21 @@ pub fn handle_get_members(address: Address) -> ZomeApiResult<Vec<Address>> {
 }
 
 pub fn handle_get_messages(
-    address: Address,
+    conversation_address: Address,
+    since: Option<Address>,
+    limit: Option<usize>,
 ) -> ZomeApiResult<Vec<GetLinksLoadResult<message::Message>>> {
     let dl = utils::DhtDagList{};
-    dl.get_content_dag(&String::from(address.clone()), &address, None, None).map(|(addrs, _more)| {
+    let since = since.unwrap_or(conversation_address.clone());
+    dl.get_content_dag(&String::from(conversation_address.clone()), &since, limit, None).map(|(addrs, _more)| {
         addrs.iter().filter_map(|address| {
             let entry = hdk::get_entry(&address).unwrap().unwrap();
             match entry {
                 Entry::App(_, entry) => {
-                    if let Ok(dag_entry) = utils::DagItem::try_from(entry) {
-                        let message = message::Message::try_from(dag_entry.content).unwrap();
-                        let address = Entry::App(
-                            MESSAGE_ENTRY.into(),
-                            message.clone().into()
-                        ).address();
+                    if let Ok(dag_entry) = utils::DagItem::try_from(entry) {                        
                         Some(GetLinksLoadResult {
-                            entry: message,
-                            address,
+                            entry: message::Message::try_from(dag_entry.content).unwrap(),
+                            address: address.clone(),
                         })
                     } else {
                         None
@@ -181,9 +175,9 @@ pub fn handle_post_message(
 ) -> ZomeApiResult<()> {
     let message = message::Message::from_spec(&message_spec, &AGENT_ADDRESS.to_string());
     let mut dl = utils::DhtDagList{};
-    dl.add_content_dag(&String::from(conversation_address.clone()), message.clone(), &conversation_address)?;
+    let message_item_addr = dl.add_content_dag(&String::from(conversation_address.clone()), message.clone(), &conversation_address)?;
     // send the message direct as a signal to every agent in the channel
-    notify_conversation_message(conversation_address, message)?;
+    notify_conversation_message(conversation_address, message, message_item_addr)?;
     Ok(())
 }
 

@@ -110,15 +110,10 @@ pub trait DagList {
             } else {
                 // push a second time but with post_process=true
                 to_visit.push((current.clone(), true));
-                // this is for the limit feature. Need to account for nodes we will post process
-                // as well as those done already + the current node
-                let count_so_far = sort_stack.len() + to_visit.iter().filter(|e|e.1).count() + 1;
-
                 for next in self.get_next(table, &current)? {
-                    let something = next.clone();
                     if !visited.contains(&next) {
-                        if !(limit.is_some() && count_so_far >= limit.unwrap()) {
-                            to_visit.push((something.clone(), false));
+                        if limit.is_none() || visited.len() < limit.unwrap() {
+                            to_visit.push((next.clone(), false));
                             visited.insert(next.clone());
                         } else {
                             more = true;
@@ -441,13 +436,13 @@ pub mod tests {
         // This retrieves only things after 2 if started at 2
         assert_eq!(
             store.get_content_dag("test_table", &addr2, None, None).unwrap().0,
-            vec![addr3, addr11, addr12],
+            vec![addr3, addr11.clone(), addr12],
         );
 
         // The limit can be used to truncate
         assert_eq!(
             store.get_content_dag("test_table", &addr0, Some(3), None),
-            Ok((vec![addr1.clone(), addr10.clone()], true)),
+            Ok((vec![addr1.clone(), addr10.clone(), addr11.clone()], true)),
         );
     }
 
@@ -469,10 +464,26 @@ pub mod tests {
         let addr0 = store.add_content_dag("test_table", 0, &root_addr).unwrap();
         let addr1 = store.add_content_dag("test_table", 1, &root_addr).unwrap();
         let addr2 = store.add_content_dag("test_table", 2, &root_addr).unwrap();
+        let addr3 = store.add_content_dag("test_table", 3, &root_addr).unwrap();
+        let addr4 = store.add_content_dag("test_table", 4, &root_addr).unwrap();
+        let addr5 = store.add_content_dag("test_table", 5, &root_addr).unwrap();
 
+        // can get the lot
         assert_eq!(
             store.get_content_dag("test_table", &root_addr, None, None),
-            Ok((vec![addr0, addr1, addr2], false)),
+            Ok((vec![addr0.clone(), addr1.clone(), addr2.clone(), addr3.clone(), addr4.clone(), addr5.clone()], false)),
+        );
+
+        // can limit starting at the root
+        assert_eq!(
+            store.get_content_dag("test_table", &root_addr, Some(3), None),
+            Ok((vec![addr0.clone(), addr1.clone(), addr2.clone()], true)),
+        );
+
+        // can limit starting at a 'since'
+        assert_eq!(
+            store.get_content_dag("test_table", &addr1, Some(3), None),
+            Ok((vec![addr2.clone(), addr3.clone(), addr4.clone()], true)),
         );
     }
 }
