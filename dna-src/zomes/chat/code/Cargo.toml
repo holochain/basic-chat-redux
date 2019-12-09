@@ -11,8 +11,8 @@
   validator = "0.9.0"
   validator_derive = "0.9.0"
 
-  hdk = "0.0.38-alpha9"
-  hdk_proc_macros = "0.0.38-alpha9"
+  hdk = "0.0.40-alpha1"
+  hdk_proc_macros = "0.0.40-alpha1"
   holochain_json_derive = "0.0.17"
 
 [lib]

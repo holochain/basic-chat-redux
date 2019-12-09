@@ -39,7 +39,7 @@ export const CreateMessageForm = ({
           <use xlinkHref='index.svg#send' />
         </svg>
       </button>
-      <button type='submit' onClick={() => getMessages(conversation.id)}>
+      <button type='submit' onClick={() => getMessages({conversationId: conversation.id})}>
         <img src='refresh.svg' alt=''/>
       </button>
     </form>

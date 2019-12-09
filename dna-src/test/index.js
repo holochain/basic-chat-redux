@@ -31,6 +31,6 @@ const orchestrator = new Orchestrator({
 })
 
 require('./agent/messages')(orchestrator.registerScenario)
-// require('./scenario/4-agents')(orchestrator.registerScenario)
+require('./scenario/4-agents')(orchestrator.registerScenario)
 
 orchestrator.run()

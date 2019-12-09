@@ -63,6 +63,8 @@ export const Group = ({
                 user={user}
                 users={users}
                 messages={messages[conversation.id]}
+                getMessages={getMessages}
+                conversation={conversation}
               />
               <CreateMessageForm user={user} conversation={conversation} message={''} runCommand={runCommand} sendMessage={sendMessage} getMessages={getMessages}/>
             </col->

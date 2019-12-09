@@ -47,7 +47,7 @@ export class View extends React.Component {
 
       setConversation: conversation => {
         this.setState({ conversation, sidebarOpen: false })
-        this.actions.getMessages(conversation.id)
+        this.actions.getMessages({conversationId: conversation.id, limit: 3})
         this.actions.getConversationMembers(conversation.id)
         this.actions.scrollToEnd()
       },
@@ -92,8 +92,8 @@ export class View extends React.Component {
         })
       },
 
-      getMessages: (conversationId) => {
-        this.makeHolochainCall(INSTANCE_ID + '/chat/get_messages', { address: conversationId }, (result) => {
+      getMessages: ({conversationId, since, limit}) => {
+        this.makeHolochainCall(INSTANCE_ID + '/chat/get_messages', { conversation_address: conversationId, limit, since }, (result) => {
           console.log('retrieved messages', result)
           this.ingestMessages(conversationId, result.Ok)
         })
