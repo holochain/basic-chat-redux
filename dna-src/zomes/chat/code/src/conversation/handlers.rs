@@ -9,6 +9,7 @@ use hdk::{
 
 };
 use std::collections::HashSet;
+use std::convert::TryFrom;
 use crate::{
     DirectMessage,
     NotificationSignalPayload,
@@ -20,7 +21,8 @@ use crate::{
 use crate::conversation::Conversation;
 use crate::message;
 use crate::utils::{get_links_and_load_type, GetLinksLoadResult};
-
+use crate::utils;
+use crate::utils::DagList;
 
 
 
@@ -146,7 +148,31 @@ pub fn handle_get_members(address: Address) -> ZomeApiResult<Vec<Address>> {
 pub fn handle_get_messages(
     address: Address,
 ) -> ZomeApiResult<Vec<GetLinksLoadResult<message::Message>>> {
-    get_links_and_load_type(&address, LinkMatch::Exactly("message_in"), LinkMatch::Any)
+    let dl = utils::DhtDagList{};
+    dl.get_content_dag(&String::from(address.clone()), &address, None, None).map(|(addrs, _more)| {
+        addrs.iter().filter_map(|address| {
+            let entry = hdk::get_entry(&address).unwrap().unwrap();
+            match entry {
+                Entry::App(_, entry) => {
+                    if let Ok(dag_entry) = utils::DagItem::try_from(entry) {
+                        let message = message::Message::try_from(dag_entry.content).unwrap();
+                        let address = Entry::App(
+                            MESSAGE_ENTRY.into(),
+                            message.clone().into()
+                        ).address();
+                        Some(GetLinksLoadResult {
+                            entry: message,
+                            address,
+                        })
+                    } else {
+                        None
+                    }
+                },
+                _ => None
+            }
+        }).collect()
+    })
+
 }
 
 pub fn handle_post_message(
@@ -154,9 +180,8 @@ pub fn handle_post_message(
     message_spec: message::MessageSpec,
 ) -> ZomeApiResult<()> {
     let message = message::Message::from_spec(&message_spec, &AGENT_ADDRESS.to_string());
-    let message_entry = Entry::App("message".into(), message.clone().into());
-    let message_addr = hdk::commit_entry(&message_entry)?;
-    hdk::link_entries(&conversation_address, &message_addr, "message_in", "")?;
+    let mut dl = utils::DhtDagList{};
+    dl.add_content_dag(&String::from(conversation_address.clone()), message.clone(), &conversation_address)?;
     // send the message direct as a signal to every agent in the channel
     notify_conversation_message(conversation_address, message)?;
     Ok(())

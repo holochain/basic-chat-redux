@@ -112,6 +112,11 @@ pub mod chat {
     }
 
     #[entry_def]
+    pub fn dag_item_entry_def() -> ValidatingEntryType {
+        utils::dag_item_entry_def()
+    }
+
+    #[entry_def]
     pub fn message_entry_def() -> ValidatingEntryType {
         message::message_definition()
     }
