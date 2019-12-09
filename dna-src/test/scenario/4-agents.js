@@ -1,6 +1,6 @@
 module.exports = scenario => {
 
-  const { config1, config2, config3, config4 } = require('../config')
+  const { config1 } = require('../config')
 
   const convoHoloscape = {
     name: 'Holoscape rox!',
@@ -32,8 +32,12 @@ module.exports = scenario => {
 
 
   scenario('4 Agents chatting', async (s, t) => {
-    const {player1} = await s.players({player1: config1}, false)
+    const {player1, player2, player3, player4} = await s.players({player1: config1, player2: config1, player3: config1, player4: config1}, false)
     await player1.spawn()
+    await player2.spawn()
+    await player3.spawn()
+    await player4.spawn()
+
     await player1.call('chat', 'chat', 'register', {name: 'player1', avatar_url: ''})
     await s.consistency() 
 
@@ -45,8 +49,6 @@ module.exports = scenario => {
     console.log(post_result)
     t.notEqual(post_result.Ok, undefined, 'post should return Ok')
 
-    const {player2} = await s.players({player2: config1}, false)
-    await player2.spawn()
     await player2.call('chat', 'chat', 'register', {name: 'player2', avatar_url: ''})
     await s.consistency() 
 
@@ -64,8 +66,6 @@ module.exports = scenario => {
     console.log(get_message_result)
     t.deepEqual(get_message_result.Ok.length, 2, 'a message from player1 and player2')
 
-    const {player3} = await s.players({player3: config1}, false)
-    await player3.spawn()
     await player3.call('chat', 'chat', 'register', {name: 'player3', avatar_url: ''})
     await s.consistency() 
 
@@ -87,8 +87,6 @@ module.exports = scenario => {
     console.log(player3_get_message_result_2)
     t.deepEqual(player3_get_message_result_2.Ok.length, 3, 'Player 3 sees 2 messages from player1 and 1 from player2')
 
-    const {player4} = await s.players({player4: config1}, false)
-    await player4.spawn()
     await player4.call('chat', 'chat', 'register', {name: 'player4', avatar_url: ''})
     await s.consistency() 
  
