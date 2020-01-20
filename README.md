@@ -29,6 +29,7 @@ There are some helpers scripts in the root package.json for building, running an
 
 ```
 npm run hc:build
+npm run hc:start
 ```
 
 or use the CLI directly
@@ -57,7 +58,7 @@ If you want to use [Holoscape](https://github.com/holochain/holonix) (and you de
 npm run hc:make-holoscape
 ```
 
-You can then use the holoscape-bundle in the project root to install. 
+You can then use the holoscape-bundle in the project root to install.
  **Note: You most likely will need to change the DNA hash in the holoscape-bundle.toml file**
 
 ## Built With

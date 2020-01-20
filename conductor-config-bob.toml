@@ -1,9 +1,9 @@
 # -----------  Agents  -----------
 [[agents]]
-  id = "test_agent1"
-  name = "Agent 1"
-  public_address = "HcScjTnefoi6c79eunbqfFNYEYovwaygbPkWEk95xVPd7vemvoB9Qwbjxf458ii"
-  keystore_file = "./agent1.keystore"
+id = 'bob'
+name = 'Bob'
+keystore_file = 'bob.key'
+public_address = 'HcScJIqWBbSaamdrw8h83GJboRQct7tpaBDtfOeuTfocpynkwmJ8RAyKXrwy45r'
 
 # -----------  DNAs  -----------
 
@@ -18,7 +18,7 @@
 [[instances]]
   id = "basic-chat"
   dna = "basic_chat_dna"
-  agent = "test_agent1"
+  agent = "bob"
 [instances.storage]
   type = "memory"
 
@@ -29,11 +29,12 @@
   admin = true
 [interfaces.driver]
   type = "websocket"
-  port = 3401
+  port = 3402
 [[interfaces.instances]]
   id = "basic-chat"
 # -----------  Networking  -----------
 
 [network]
   type = "sim2h"
-  sim2h_url = 'wss://sim2h.holochain.org:9000'
+  sim2h_url = 'wss://localhost:9000'
+  # sim2h_url = 'wss://sim2h.holochain.org:9000'
