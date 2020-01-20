@@ -12,6 +12,8 @@
   },
   "scripts": {
     "start": "REACT_APP_WEBSOCKET_INTERFACE='ws://localhost:3401' PORT=3001 react-scripts start",
+    "start:alice": "REACT_APP_WEBSOCKET_INTERFACE='ws://localhost:3401' PORT=3001 react-scripts start",
+    "start:bob": "REACT_APP_WEBSOCKET_INTERFACE='ws://localhost:3402' PORT=3002 react-scripts start",
     "build": "rm -rf ../ui && react-scripts build && mv ./build ../ui",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
