@@ -3,7 +3,7 @@ bridges = []
 [[instances]]
 name = "Basic Chat Public"
 id = "__basic-chat-public"
-dna_hash = "QmYNDZKCy9RFNwAbLxzUkyXE8qveG8Sh4NG4UHunijZREh"
+dna_hash = "QmbRHccJnmNL9g9v6RKMEZWevJ3AFMEbnyw1F9q1xRmqpW"
 uri = "file:./dna/basic-chat.dna.json"
 
 [[UIs]]
