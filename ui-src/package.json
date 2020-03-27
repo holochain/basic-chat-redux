@@ -3,11 +3,11 @@
   "version": "0.0.17",
   "dependencies": {
     "@holochain/hc-web-client": "^0.5.3",
-    "object-path-immutable": "^1.0.1",
-    "react": "^16.2.0",
-    "react-dom": "^16.2.0",
-    "react-linkify": "^0.2.2",
-    "react-scripts": "next",
+    "object-path-immutable": "^4.1.0",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-linkify": "^1.0.0-alpha",
+    "react-scripts": "3.4.1",
     "vuid": "^1.0.0"
   },
   "scripts": {
@@ -25,7 +25,7 @@
     "not op_mini all"
   ],
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "babel-loader": "^8.0.5"
+    "@babel/core": "^7.9.0",
+    "babel-loader": "^8.1.0"
   }
 }
