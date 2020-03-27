@@ -5,12 +5,9 @@ process.on('unhandledRejection', error => {
 });
 
 
-const networkType = process.env.TEST_NETWORK_TYPE
-const middleware = 
+const networkType = process.env.TEST_NETWORK_TYPE || 'sim2h'
+const middleware =
   ( networkType === 'websocket'
-  ? combine(tapeExecutor(require('tape')), localOnly, callSync)
-
-  : networkType === 'sim1h'
   ? combine(tapeExecutor(require('tape')), localOnly, callSync)
 
   : networkType === 'sim2h'

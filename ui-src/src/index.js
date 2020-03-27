@@ -186,10 +186,11 @@ export class View extends React.Component {
   }
 
   handleSignal = (signal) => {
-    console.log(JSON.stringify(signal.signal))
-    const signalContent = signal.signal
-    let signalArgs = JSON.parse(signalContent.arguments)
-    switch(signalContent.name) {
+    console.log(JSON.stringify(signal))
+    if (signal.signal) {
+      let signalContent = signal.signal
+      let signalArgs = JSON.parse(signalContent.arguments)
+      switch(signalContent.name) {
       case 'new_convo_message':
         const { conversationAddress, message, messageAddress } = signalArgs
         this.ingestMessages(conversationAddress, [{entry: message, address: messageAddress}])
@@ -205,6 +206,7 @@ export class View extends React.Component {
         break
       default:
         console.log('unrecognised signal type received')
+      }
     }
   }
 
