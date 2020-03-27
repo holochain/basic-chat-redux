@@ -1,6 +1,6 @@
 {
   "name": "basic-chat",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "A fork of peer chat for holochain with all but the core chat functionality removed",
   "scripts": {
     "hc:build": "rm -rf tmp-storage && mkdir -p ./dna && cd dna-src && hc package -o ../dna/basic-chat.dna.json",

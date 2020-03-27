@@ -1,8 +1,8 @@
 {
   "name": "basic-chat",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "dependencies": {
-    "@holochain/hc-web-client": "^0.5.0",
+    "@holochain/hc-web-client": "^0.5.3",
     "object-path-immutable": "^1.0.1",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",

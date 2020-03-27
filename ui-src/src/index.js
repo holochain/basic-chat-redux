@@ -188,6 +188,7 @@ export class View extends React.Component {
   handleSignal = (signal) => {
     console.log(JSON.stringify(signal.signal))
     const signalContent = signal.signal
+
     let signalArgs = JSON.parse(signalContent.arguments)
     switch(signalContent.name) {
       case 'new_convo_message':
